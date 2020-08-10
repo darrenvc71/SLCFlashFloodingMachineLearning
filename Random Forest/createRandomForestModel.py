@@ -216,6 +216,7 @@ for csv in glob.glob(fileString):
 
     # Print out a list of how many cases are being used in training/testing
     print('Using ' + str(int(ytrain.sum())) + ' FF cases for ' + site + ' training and ' + str(int(ytest.sum())) + ' cases for testing')
+    print('Total of ' + str(len(training_df)) + ' training cases and ' + str(len(test_df)) + ' testing cases')	
 
     # Create a random forest model using a default set of hyperparameters. If the user specifies, 
     # tune the hyperparameters first
