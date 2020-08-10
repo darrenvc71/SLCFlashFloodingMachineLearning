@@ -165,12 +165,32 @@ for csv in glob.glob(fileString):
 
     df = pd.read_csv(csv)
       
-    # This was in Nick's code. It calls three basins flooding a flash flood day for KBCE (all), and 1 basin
-    # a hit for 4HV/SGU. Mike may want to review this.
-    if site == 'KBCE':
-       df.loc[(df['Basins'] == 3), 'Result'] = 1
-    if '4HV' or 'SGU' in site_name:
-       df.loc[(df['Basins'] == 1), 'Result'] = 1
+    # Build a Results column if it doesn't exist already
+    if 'Result' not in df.columns:
+        df['Result'] = np.nan
+    
+    # Assign a value for the Results column (the predictand) based on the number of basins flooding
+    # Still deciding how to handle this as there are not many days of >1 basin flooding when compared to non-flood days
+    df.loc[(df['Basins'] == 0), 'Result'] = 0 
+    # The code below works correctly, but is very limiting to the number of cases for training
+    #if site == 'KBCE':
+    #    df.loc[(df['Basins'] == 0), 'Result'] = 0
+    #    df.loc[(df['Basins'] >= 1), 'Result'] = np.nan       
+    #    df.loc[(df['Basins'] >= 3), 'Result'] = 1
+    #elif site == "K4HV" or site == "KSGU":   
+    #    df.loc[(df['Basins'] >= 1), 'Result'] = 1      
+    #elif site == "KPGA": 
+    #    df.loc[(df['Basins'] >= 2), 'Result'] = 1
+    # Because the code above is quite limiting, using this alternative for now
+    df.loc[(df['Basins'] >= 1), 'Result'] = 1 
+    
+    # Randomly remove many of the non-flash flooding dates
+    #indexToKeep = list(df.index[df['Result'] == 1])
+    #numberOfCases = int(df['Result'].sum())
+    #dropIndicies = []
+    #for x in range(1,len(df)-2*numberOfCases):
+    #    dropIndicies.append(np.random.choice(np.setdiff1d(range(1,len(df)), indexToKeep.append(x))))
+    #df = df.drop(dropIndicies)
             
     # Make a new dataframe that removes any dates with missing entries, set up the predictor & predictands   
     df2 = df.dropna(subset=KIN + THERMO + ['Basins'] + ['Result'] + ['deterministicRRA'] + ['probabilisticRRA'])  
@@ -193,6 +213,9 @@ for csv in glob.glob(fileString):
         xtest = test_df[THERMO + KIN]
         ytrain = training_df['Result']
         ytest = test_df['Result']
+
+    # Print out a list of how many cases are being used in training/testing
+    print('Using ' + str(int(ytrain.sum())) + ' FF cases for ' + site + ' training and ' + str(int(ytest.sum())) + ' cases for testing')
 
     # Create a random forest model using a default set of hyperparameters. If the user specifies, 
     # tune the hyperparameters first
