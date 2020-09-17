@@ -118,29 +118,50 @@ KIN = ['0-6km Shear Dir', '0-6km Shear Mag', 'C Dn Dir',
        '4-6km mag']
 
 def createReliabilityPlots(site, response5, response6, ytest, yprob, yprob2, yprob3):
-      if response5 == '1':
-         #slope,intercept,r_value,p_value,std_err = stats.linregress(test_df['Basins'], yprob) 
-         #plt.figure()
-         #plt.suptitle('Random Forest Probabilistic Forecast vs # of Basins Flooded for ' + site)
-         #plt.scatter(yprob, test_df['Basins'], s=75, color='red', zorder=200, edgecolor='maroon',label='# of Basins Flooded')
-         
+      if response5 == '2' or len(response5) == 0:
          clf_score = brier_score_loss(ytest, yprob)
-         plt.figure() 
          fraction_of_positives, mean_predicted_value = calibration_curve(ytest, yprob, n_bins=10)
-         plt.plot([0, 1], [0, 1], "k:", label="Perfectly Calibrated")
-         plt.plot(mean_predicted_value, fraction_of_positives, "s-", label="%s (%1.3f)" % ("Random Forest Model for " + site, clf_score))
+         fig, axs = plt.subplots(2)
+         plt.suptitle('Reliability Plot for {}'.format(site), fontweight='bold')
+         axs[0].plot([0, 1], [0, 1], "k:", label="Perfectly Calibrated")
+         axs[0].plot(mean_predicted_value, fraction_of_positives, "s-", label="%s (%1.3f)" % ("Random Forest Model for " + site, clf_score))
+         axs[0].set_ylabel('Fraction of Positives', fontweight='bold') 
+         axs[0].set_xlabel('Mean Predicted Value', fontweight='bold') 
+         axs[0].legend(loc='upper left')
+         axs[1].hist(yprob, range=(0, 1), bins=10, label=site,
+             histtype="step", lw=2)
+         axs[1].set_xlabel("Mean predicted value", fontweight='bold')
+         axs[1].set_ylabel("Count", fontweight='bold')
+         axs[1].set_yscale('log')
+         # Add plots for legacy RRA product comparison, if requested
          if response6 == '2' or len(response6) == 0:
             clf_score = brier_score_loss(ytest, yprob2)
-            plt.figure() 
+            fig, axs = plt.subplots(2)
             fraction_of_positives, mean_predicted_value = calibration_curve(ytest, yprob2, n_bins=10)
-            plt.plot([0, 1], [0, 1], "k:", label="Perfectly Calibrated")
-            plt.plot(mean_predicted_value, fraction_of_positives, "s-", label="%s (%1.3f)" % ("Legacy RRA", clf_score))	 
+            axs[0].plot([0, 1], [0, 1], "k:", label="Perfectly Calibrated")
+            axs[0].plot(mean_predicted_value, fraction_of_positives, "s-", label="%s (%1.3f)" % ("Legacy RRA", clf_score))
+            axs[0].set_ylabel('Fraction of Positives', fontweight='bold') 
+            axs[0].set_xlabel('Mean Predicted Value', fontweight='bold') 
+            axs[0].legend(loc='upper left')
+            axs[1].hist(yprob2, range=(0, 1), bins=10, label=site,
+            histtype="step", lw=2)
+            axs[1].set_xlabel("Mean predicted value", fontweight='bold')
+            axs[1].set_ylabel("Count", fontweight='bold')
+            axs[1].set_yscale('log')
 
             clf_score = brier_score_loss(ytest, yprob3)
-            plt.figure() 
+            fig, axs = plt.subplots(2) 
             fraction_of_positives, mean_predicted_value = calibration_curve(ytest, yprob3, n_bins=10)
-            plt.plot([0, 1], [0, 1], "k:", label="Perfectly Calibrated")
-            plt.plot(mean_predicted_value, fraction_of_positives, "s-", label="%s (%1.3f)" % ("Blended RRA & Random Forest", clf_score))
+            axs[0].plot([0, 1], [0, 1], "k:", label="Perfectly Calibrated")
+            axs[0].plot(mean_predicted_value, fraction_of_positives, "s-", label="%s (%1.3f)" % ("Blended RRA & Random Forest", clf_score))
+            axs[0].set_ylabel('Fraction of Positives', fontweight='bold') 
+            axs[0].set_xlabel('Mean Predicted Value', fontweight='bold') 
+            axs[0].legend(loc='upper left')
+            axs[1].hist(yprob3, range=(0, 1), bins=10, label=site,
+            histtype="step", lw=2)
+            axs[1].set_xlabel("Mean predicted value", fontweight='bold')
+            axs[1].set_ylabel("Count", fontweight='bold')
+            axs[1].set_yscale('log')  
 
 
 def tuneHyperparameters(xtrain, ytrain):
